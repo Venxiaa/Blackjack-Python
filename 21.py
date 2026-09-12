@@ -1,5 +1,5 @@
 #this was made to practice defining statements
-#some very outdated code im not chaning cause lazy
+#some very outdated code im not changing cause lazy
 
 import random
 
