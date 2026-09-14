@@ -56,7 +56,6 @@ class Hand:
         aces = sum(card.split()[0] == "A" for card in self.hand)
         adjusted_total = total
         aces_as_one = 0
-
         while aces_as_one < aces and adjusted_total > 21:
             adjusted_total -= 10
             aces_as_one += 1
@@ -149,10 +148,10 @@ class Game:
         player_hand = self.player_hand
         dealer_hand = self.dealer_hand
         while True:
-            calculate_player_hand = player_hand.calculate_hand()
+            players_hand_total = player_hand.calculated_hand
             message_banner(
             f"Your cards: {', '.join(player_hand.hand)}\n"
-            f"Your total: {calculate_player_hand}\n"
+            f"Your total: {players_hand_total}\n"
             f"Dealer's first card: {dealer_hand.hand[0]}"
             )
             game_commands = ["Hit", "Stand"]
@@ -160,12 +159,12 @@ class Game:
             if game_command == "hit":
                 player_hand.draw_card()
                 player_hand.ace_dropped()
-                if player_hand.calculate_hand() > 21:
+                if player_hand.calculated_hand > 21:
                     self.player_bust = True
                     print(
                     "\nBust!\n"
                     f"your cards at the end: {', '.join(player_hand.hand)}\n"
-                    f"your total: {player_hand.calculate_hand()}"
+                    f"your total: {player_hand.calculated_hand}"
                     )
                     break
             elif game_command == "stand":
@@ -184,16 +183,16 @@ class Game:
     def dealer_turn(self):
         dealer_hand = self.dealer_hand
         while self.player_bust == False and self.dealer_bust == False:
-            calculate_dealer_hand = dealer_hand.calculate_hand()
+            calculated_dealer_hand = dealer_hand.calculated_hand
             print(
                 f"\nDealer's hand: {', '.join(dealer_hand.hand)}\n"
-                f"Dealer's total: {calculate_dealer_hand}"
+                f"Dealer's total: {calculated_dealer_hand}"
                 )
-            if calculate_dealer_hand > 21:
+            if calculated_dealer_hand > 21:
                 self.dealer_bust = True
                 print("Dealer Has Busted")
                 break
-            if (calculate_dealer_hand == 17 and not dealer_hand.soft_17()) or calculate_dealer_hand >= 18:
+            if (calculated_dealer_hand == 17 and not dealer_hand.soft_17()) or calculated_dealer_hand >= 18:
                 print("dealer decided to stand")
                 break
             print("dealer decided to hit")
@@ -202,8 +201,8 @@ class Game:
     def stand_off(self):
         player_bust = self.player_bust
         dealer_bust = self.dealer_bust
-        calculate_dealer_hand = self.dealer_hand.calculate_hand()
-        calculate_player_hand = self.player_hand.calculate_hand()
+        dealers_hand_total = self.dealer_hand.calculated_hand
+        players_hand_total = self.player_hand.calculated_hand
         if player_bust:
             message_banner("Player Lost")
             player.lose_bet()
@@ -213,15 +212,15 @@ class Game:
             player.win_bet()
             show_balance()
         else:
-            if calculate_player_hand == calculate_dealer_hand:
+            if players_hand_total == dealers_hand_total:
                 message_banner("Player Tied")
                 player.tie_bet()
                 show_balance()
-            elif calculate_player_hand > calculate_dealer_hand:
+            elif players_hand_total > dealers_hand_total:
                 message_banner("Player Won!")
                 player.win_bet()
                 show_balance()
-            elif calculate_player_hand < calculate_dealer_hand:
+            elif players_hand_total < dealers_hand_total:
                 message_banner("Player Lost")
                 player.lose_bet()
                 show_balance()
