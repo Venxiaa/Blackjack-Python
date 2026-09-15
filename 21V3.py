@@ -1,8 +1,7 @@
 #V3! moved most if not all game logic to a class~
-#though i have a weird itch that its unoptimised maybe ill come back to it
-#can't wait to add powerups in V4!
 import random
 
+#-----Card Data-----
 card_values = {
     "A": 11,  # Can also be 1
     "2": 2,
@@ -26,7 +25,7 @@ suits = [
 "Clubs",
 ]
 
-
+#-----Deck Class-----
 class Deck:
     def __init__(self, card_values, suits):
         self.card_values = card_values
@@ -44,12 +43,12 @@ class Deck:
     def draw(self):
         return self.available_cards.pop(0)
 
-
+#-----Hand Class-----
 class Hand:
-    def __init__(self, hand, deck, card_values):
+    def __init__(self, hand, deck):
         self.hand = hand
-        self.deck = deck
-        self.card_values = card_values
+        self.hand_deck = deck
+        self.card_values = deck.card_values
 
     def calculate_hand(self):
         total = sum(self.card_values[card.split()[0]] for card in self.hand)
@@ -65,10 +64,10 @@ class Hand:
         return adjusted_total
 
     def draw_card(self):
-        self.hand.append(self.deck.draw())
+        self.hand.append(self.hand_deck.draw())
         self.calculate_hand()
 
-    def ace_dropped(self):
+    def announce_ace_adjustment(self):
         current_ace = (self.raw_total - self.calculated_hand)  / 10
         if current_ace >= 1:
             print("since you have reaced >21 and have a ace, your ace turns into 1")
@@ -77,7 +76,7 @@ class Hand:
         current_ace = (self.raw_total - self.calculated_hand)  / 10
         return self.ace_count - current_ace >= 1 and self.calculated_hand == 17
 
-
+#-----Player Class-----
 class Player:
     def __init__(self, balance=1000):
         self.balance = balance
@@ -134,8 +133,8 @@ class Game:
 
     def start_round(self):
         deck = Deck(card_values, suits)
-        player_hand = Hand([], deck, card_values)
-        dealer_hand = Hand([], deck, card_values)
+        player_hand = Hand([], deck)
+        dealer_hand = Hand([], deck)
         for _ in range(2):
             player_hand.draw_card()
             dealer_hand.draw_card()
@@ -158,7 +157,7 @@ class Game:
             game_command = input(f"Commands: {", ".join(game_commands)}: ").strip().lower()
             if game_command == "hit":
                 player_hand.draw_card()
-                player_hand.ace_dropped()
+                player_hand.announce_ace_adjustment()
                 if player_hand.calculated_hand > 21:
                     self.player_bust = True
                     print(
@@ -257,6 +256,7 @@ while True:
             game.stand_off()
         else:
             print("No money to bet")
+
 #Others
     #check balance
     elif command in ["balance", "2"]:
