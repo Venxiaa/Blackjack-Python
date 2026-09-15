@@ -284,11 +284,15 @@ def hidden_menu():
         "Money": money,
         "Xray": xray,
         "Winbutton": winbutton,
+        "Leave": "",
     }
     while True:
-        command = input(f"Commands: {", ".join(hidden_menu_actions)}: ").strip().capitalize()
+        command = input(f"\nCommands: {", ".join(hidden_menu_actions)}: ").strip().capitalize()
         if command in hidden_menu_actions and cheats == True:
             hidden_menu_actions[command]()
+        elif command == "Leave":
+            print("")
+            break
         else:
             print("unknown command")
 
