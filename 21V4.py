@@ -1,4 +1,12 @@
 #Last and Final Version. its been fun coding this but its gotta end someway.
+#changelog (compared to V3):
+#   optimised standoff
+#   moved game logic into separate Game methods
+#   replaced main command if/elif chain with function dictionary
+#   improved cheat menu and fixed Leave command bug
+#   added Shop class and player inventory
+#   added shop/help menu systems
+#   worked more on shop. still a long way to go
 #TODO:
 #   Powerup system
 #   finalise things
@@ -116,6 +124,7 @@ class Shop:
         self.player = player
 
     def peek_dealer_card(self):
+
         pass
 
     def guaranteed_safe_card(self):
@@ -139,16 +148,16 @@ class Game:
     def betting_phase(self):
         while True:
             show_balance()
-            if player.balance > 0:
+            if self.player.balance > 0:
                 try:
                     bet = int(input("How much to bet?: "))
                     if bet < 0:
                         raise ValueError
-                    if player.place_bet(bet):
+                    if self.player.place_bet(bet):
                         print(f"\nYou placed a bet of ${bet}")
                         return True
                     else:
-                        print(f"You don't have enough money missing amount: ${bet - player.balance}") 
+                        print(f"You don't have enough money missing amount: ${bet - self.player.balance}") 
                         continue
                 except ValueError:
                     print("Invalid Input, needs to be a positive whole number.")
@@ -168,15 +177,13 @@ class Game:
         self.dealer_hand = dealer_hand
 
     def player_turn(self):
-        deck = self.deck
         player_hand = self.player_hand
-        dealer_hand = self.dealer_hand
         while True:
             players_hand_total = player_hand.calculated_hand
             message_banner(
             f"Your cards: {', '.join(player_hand.hand)}\n"
             f"Your total: {players_hand_total}\n"
-            f"Dealer's first card: {dealer_hand.hand[0]}"
+            f"Dealer's first card: {self.dealer_hand.hand[0]}"
             )
             game_commands = ["Hit", "Stand"]
             game_command = input(f"Commands: {", ".join(game_commands)}: ").strip().lower()
@@ -195,9 +202,9 @@ class Game:
                 print("player decided to stand")
                 return
             elif game_command == "deck" and xray_:
-                print(f"next 5 upcomming cards: {', '.join(deck.available_cards[:5])}")
+                print(f"next 5 upcomming cards: {', '.join(self.deck.available_cards[:5])}")
             elif game_command == "dealer" and xray_:
-                print(f"{', '.join(dealer_hand.hand)}")
+                print(f"{', '.join(self.dealer_hand.hand)}")
             elif game_command == "win" and win_button:
                 self.dealer_bust = True
                 break
@@ -223,31 +230,30 @@ class Game:
             dealer_hand.draw_card()
 
     def stand_off(self):
-        player_bust = self.player_bust
-        dealer_bust = self.dealer_bust
-        dealers_hand_total = self.dealer_hand.calculated_hand
-        players_hand_total = self.player_hand.calculated_hand
-        if player_bust:
-            message_banner("Player Lost")
-            player.lose_bet()
-            show_balance()
-        elif dealer_bust:
-            message_banner("Player Won!")
-            player.win_bet()
-            show_balance()
+        if self.player_bust:
+            result = "Player Lost"
+            action = self.player.lose_bet
+
+        elif self.dealer_bust:
+            result = "Player Won!"
+            action = self.player.win_bet
+
+        elif self.player_hand.calculated_hand == self.dealer_hand.calculated_hand:
+            result = "Player Tied"
+            action = self.player.tie_bet
+
+        elif self.player_hand.calculated_hand > self.dealer_hand.calculated_hand:
+            result = "Player Won!"
+            action = self.player.win_bet
+
         else:
-            if players_hand_total == dealers_hand_total:
-                message_banner("Player Tied")
-                player.tie_bet()
-                show_balance()
-            elif players_hand_total > dealers_hand_total:
-                message_banner("Player Won!")
-                player.win_bet()
-                show_balance()
-            elif players_hand_total < dealers_hand_total:
-                message_banner("Player Lost")
-                player.lose_bet()
-                show_balance()
+            result = "Player Lost"
+            action = self.player.lose_bet
+
+        message_banner(result)
+        action()
+        show_balance()
+
 
 #-----Reusable Prints-----
 def message_banner(message):
@@ -256,10 +262,32 @@ def message_banner(message):
     f"{message}\n"
     f"{'-' * 30}")
 
+def main_menu_command_list():
+    message_banner(
+        "Available Commands:\n"
+        "? / help | Shows available commands\n"
+        "Play | Starts the game\n"
+        "Balance | Show the player's balance\n"
+        "Exit | Closes the game\n"
+        "CheatMenu | Shows and enables cheats"
+    )
+def shop_menu_command_list():
+    message_banner(
+        "Available Commands:\n"
+        "? / help | Shows available commands\n"
+        "items | Shows available items and it's description\n"
+        "buy | Buys item(s) usage: buy <item> <amount> / buy guaranteed-safe-card 21 / buy GSC 21\n"
+        "leave | Leaves the shop"
+    )
+def show_shop_items():
+    message_banner(
+        "items also have abbreviations e.g guaranteed-safe-card -> GSC\n"
+        "second-chance | Activates automatically upon player getting more than 21 (ONLY CAN BE USED ONCE PER ROUND)\n"
+        "guaranteed-safe-card | Manual activation before hitting\n"
+        "peek-dealer-card | shows dealer's cards\n"
+        "discount_bet | unknown yet"
+    )
 #-----Menu Functions-----
-def show_balance():
-    print(f"\nYour Balance: ${player.balance}")
-
 def start_play():
     game = Game(player)
     if game.betting_phase():
@@ -274,9 +302,26 @@ def start_play():
     else:
         print("No money to bet")
 
+
+def shop():
+    items_and_abriv = ["second-chance", "sc", "guaranteed-safe-card", "gsc", "peek-dealer-card", "pdc"]
+    shop_menu_command_list()
+    print("Welcome to the shop!\n")
+    while True:
+        shop_command = input("Command: ").strip().lower()
+        if shop_command == "items":
+            show_shop_items()
+        else:
+            print("\nunknown command")
+
+def show_balance():
+    print(f"Your Balance: ${player.balance}")
+
+
 def exit_game():
     print("Exiting, Bye!")
     exit()
+
 
 #-----Cheats-----
 def hidden_menu():
@@ -284,23 +329,25 @@ def hidden_menu():
         "Money": money,
         "Xray": xray,
         "Winbutton": winbutton,
-        "Leave": "",
+        "Leave": "\nExiting Secret Menu.",
     }
     while True:
-        command = input(f"\nCommands: {", ".join(hidden_menu_actions)}: ").strip().capitalize()
-        if command in hidden_menu_actions and cheats == True:
-            hidden_menu_actions[command]()
-        elif command == "Leave":
-            print("")
+        command = input(f"Commands: {", ".join(hidden_menu_actions)}: ").strip().capitalize()
+        if command == "Leave":
+            print(hidden_menu_actions[command])
             break
+        elif cheats == False:
+            print("\nCheats are disabled, enter whatcheats in the main command to activate")
+        elif command in hidden_menu_actions and cheats == True:
+            hidden_menu_actions[command]()
         else:
-            print("unknown command")
+            print("\nunknown command")
 
 def show_cheats():
     global cheats
     cheats = True
-    print(
-    "\nCheat commands (Enter in hidden menu):\n"
+    message_banner(
+    "Cheat commands (Enter 'secretmenu' inside the commands to use):\n"
     "Money, spawns in money\n"
     "Xray, see dealer/deck cards\n"
     "Winbutton, win button."
@@ -329,15 +376,20 @@ cheats = False
 xray_ = False
 win_button = False
 menu_actions = {
-    "Play": start_play,
-    "Balance": show_balance,
-    "Exit": exit_game,
-    "Secretmenu": hidden_menu,
-    "Whatcheats": show_cheats,
+    "play": start_play,
+    "balance": show_balance,
+    "shop": shop,
+    "exit": exit_game,
+    "secretmenu": hidden_menu,
+    "whatcheats": show_cheats,
 }
+main_menu_command_list()
 while True:
-    command = input(f"Commands: {", ".join(menu_actions)}: ").strip().capitalize()
-    if command in menu_actions:
+    command = input(f"Commands: ").strip().lower()
+    if command in ["?", "help"]:
+        main_menu_command_list()
+    elif command in menu_actions:
+        print("")
         menu_actions[command]()
-    else:
-        print("unknown command")
+    else:   
+        print("\nunknown command")
