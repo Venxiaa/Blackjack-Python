@@ -5,8 +5,7 @@
 #   replaced main command if/elif chain with function dictionary
 #   improved cheat menu and fixed Leave command bug
 #   added Shop class and player inventory
-#   added shop/help menu systems
-#   worked more on shop. still a long way to go
+#   added shop/help menu systems    
 
 #TODO:
 #   Powerup system
@@ -149,7 +148,6 @@ class Powerups:
         pass
 
 
-
 #-----Game Logic----
 class Game:
     def __init__(self, player):
@@ -267,53 +265,7 @@ class Game:
         show_balance()
 
 
-#-----Reusable Prints-----
-def message_banner(message):
-    print(
-    f"{'-' * 30}\n"
-    f"{message}\n"
-    f"{'-' * 30}")
-
-def main_menu_command_list():
-    message_banner(
-        "Available Commands:\n"
-        "? / help | Shows available commands\n"
-        "Play | Starts the game\n"
-        "Shop | Buy Powerups at the shop™\n"
-        "Balance | Show the player's balance\n"
-        "Exit | Closes the game\n"
-        "CheatMenu | Shows and enables cheats"
-    )
-def shop_menu_command_list():
-    message_banner(
-        "Available Commands:\n"
-        "? / help | Shows available commands\n"
-        "items | Shows available items and it's description\n"
-        "buy | Buys item(s) usage: buy <item> <amount> / buy guaranteed-safe-card 21 / buy GSC 21\n"
-        "leave | Leaves the shop"
-    )
-def show_shop_items():
-    message_banner(
-        "items also have abbreviations e.g guaranteed-safe-card -> GSC\n"
-        "second-chance | Activates automatically upon player getting more than 21 (ONLY CAN BE USED ONCE PER ROUND)\n"
-        "guaranteed-safe-card | Manual activation before hitting\n"
-        "peek-dealer-card | shows dealer's cards\n"
-        "discount_bet | unknown yet"
-    )
-#-----Menu Functions-----
-def start_play():
-    game = Game(player)
-    if game.betting_phase():
-        #----Game Set-up-----
-        game.start_round()
-        #-----Player inteaction-----
-        game.player_turn()
-        #------Dealer Logic------
-        game.dealer_turn()
-        #------Stand-off------
-        game.stand_off()
-    else:
-        print("No money to bet")
+#-----buy item function-----
 
 def buy_item(shop_command):
     items_and_abriv = {
@@ -381,6 +333,57 @@ def buy_item(shop_command):
                 print("\nNot a number")
     else:
         print("\nUnknown command. Format should be: buy <item> <quantity>")
+
+        
+#-----Reusable Prints-----
+def message_banner(message):
+    print(
+    f"{'-' * 30}\n"
+    f"{message}\n"
+    f"{'-' * 30}")
+
+def main_menu_command_list():
+    message_banner(
+        "Available Commands:\n"
+        "? / help | Shows available commands\n"
+        "Play | Starts the game\n"
+        "Shop | Buy Powerups at the shop™\n"
+        "Balance | Show the player's balance\n"
+        "Exit | Closes the game\n"
+        "WhatCheats | Shows and enables cheats"
+    )
+def shop_menu_command_list():
+    message_banner(
+        "Available Commands:\n"
+        "? / help | Shows available commands\n"
+        "items | Shows available items and it's description\n"
+        "buy | Buys item(s) usage: buy <item> <amount> / buy guaranteed-safe-card 21 / buy GSC 21\n"
+        "leave | Leaves the shop"
+    )
+def show_shop_items():
+    message_banner(
+        "items also have abbreviations e.g guaranteed-safe-card -> GSC\n"
+        "second-chance | Activates automatically upon player getting more than 21 (ONLY CAN BE USED ONCE PER ROUND)\n"
+        "guaranteed-safe-card | Manual activation before hitting\n"
+        "peek-dealer-card | shows dealer's cards\n"
+        "discount_bet | unknown yet"
+    )
+
+#-----Menu Functions-----
+def start_play():
+    game = Game(player)
+    if game.betting_phase():
+        #----Game Set-up-----
+        game.start_round()
+        #-----Player inteaction-----
+        game.player_turn()
+        #------Dealer Logic------
+        game.dealer_turn()
+        #------Stand-off------
+        game.stand_off()
+    else:
+        print("No money to bet")
+
 
 def shop():
     shop_menu_command_list()
@@ -458,6 +461,7 @@ player = Player()
 cheats = False
 xray_ = False
 win_button = False
+
 menu_actions = {
     "play": start_play,
     "shop": shop,
