@@ -93,12 +93,12 @@ class Hand:
 
 #-----Player Class-----
 class Player:
-    def __init__(self, balance=1000):
+    def __init__(self, balance=5000):
         self.balance = balance
         self.inventory = {
-            "second-chance": 0,
-            "guaranteed-safe-card": 0,
-            "peek-dealer-card": 0,
+            "Second Chance": 0,
+            "Guaranteed Safe Card": 0,
+            "Peek Dealer Card": 0,
         }
 
     def place_bet(self,amount):
@@ -266,7 +266,6 @@ class Game:
 
 
 #-----buy item function-----
-
 def buy_item(shop_command):
     items_and_abriv = {
                 "second-chance": {"name": "Second Chance", "price": 1500},
@@ -301,16 +300,17 @@ def buy_item(shop_command):
 
             if player.balance >= total_price:
                 item_name = items_and_abriv[item]["name"]
-                print(
-                f"Item: {item_name} x {quantity}"
+                message_banner(
+                f"Item: {item_name} x {quantity}\n"
                 f"Total Cost: ${total_price} (Current Balance: ${player.balance})")
                 while True:
-                    confirm_input = input("\nConfirm purchase (yes/no)? ").strip().lower()
+                    confirm_input = input("purchase (yes/no)? ").strip().lower()
                     if confirm_input in ["yes", "y"]:
                         confirm = True
                         break
                     elif confirm_input in ["no", "n"]:
                         confirm = False
+                        break
                     else:
                         print("Unknown command.")
                 if confirm:
@@ -334,7 +334,7 @@ def buy_item(shop_command):
     else:
         print("\nUnknown command. Format should be: buy <item> <quantity>")
 
-        
+
 #-----Reusable Prints-----
 def message_banner(message):
     print(
@@ -389,7 +389,7 @@ def shop():
     shop_menu_command_list()
     print("Welcome to the shop!\n")
     while True:
-        shop_command = input("Command: ").strip().lower()
+        shop_command = input("Shop Command: ").strip().lower()
         if shop_command == "items":
             show_shop_items()
         elif shop_command != "" and shop_command.split()[0] == "buy":
