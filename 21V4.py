@@ -7,6 +7,7 @@
 #   added Shop class and player inventory
 #   added shop/help menu systems
 #   worked more on shop. still a long way to go
+
 #TODO:
 #   Powerup system
 #   finalise things
@@ -42,6 +43,7 @@ class Deck:
         self.card_values = card_values
         self.suits = suits
         self.deck_constructer()
+        self.placed_bet = 0
 
     def deck_constructer(self):
         available_cards = []
@@ -94,7 +96,11 @@ class Hand:
 class Player:
     def __init__(self, balance=1000):
         self.balance = balance
-        self.inventory = []
+        self.inventory = {
+            "second-chance": 0,
+            "guaranteed-safe-card": 0,
+            "peek-dealer-card": 0,
+        }
 
     def place_bet(self,amount):
         if amount > self.balance:
@@ -118,13 +124,19 @@ class Player:
     def money(self,amount):
         self.balance += amount
 
-#-----Shop Class----
-class Shop:
+    def display_inventory(self):
+        message_banner("Player Inventory:")
+        for item, count in self.inventory.items():
+            print(f"  {item:<22} : {count}")
+        print(f"{'-' * 30}")
+
+#-----Powerups Class----
+class Powerups:
     def __init__(self, player):
         self.player = player
 
     def peek_dealer_card(self):
-
+            
         pass
 
     def guaranteed_safe_card(self):
@@ -157,7 +169,7 @@ class Game:
                         print(f"\nYou placed a bet of ${bet}")
                         return True
                     else:
-                        print(f"You don't have enough money missing amount: ${bet - self.player.balance}") 
+                        print(f"\nYou don't have enough money missing amount: ${bet - self.player.balance}") 
                         continue
                 except ValueError:
                     print("Invalid Input, needs to be a positive whole number.")
@@ -267,6 +279,7 @@ def main_menu_command_list():
         "Available Commands:\n"
         "? / help | Shows available commands\n"
         "Play | Starts the game\n"
+        "Shop | Buy Powerups at the shop™\n"
         "Balance | Show the player's balance\n"
         "Exit | Closes the game\n"
         "CheatMenu | Shows and enables cheats"
@@ -302,15 +315,85 @@ def start_play():
     else:
         print("No money to bet")
 
+def buy_item(shop_command):
+    items_and_abriv = {
+                "second-chance": {"name": "Second Chance", "price": 1500},
+                "guaranteed-safe-card": {"name": "Guaranteed Safe Card", "price": 1250},
+                "peek-dealer-card": {"name": "Peek Dealer Card", "price": 1150}
+            }
+    items_and_abriv["sc"] = items_and_abriv["second-chance"]
+    items_and_abriv["gsc"] = items_and_abriv["guaranteed-safe-card"]
+    items_and_abriv["pdc"] = items_and_abriv["peek-dealer-card"]
+
+    parts = shop_command.split()
+
+    def number_validator(value):
+        try: valid_number = int(value)
+        except ValueError:
+            return "NaN"
+        if valid_number > 0:
+            return "valid"
+        elif valid_number == 0:
+            return "zero"
+        else:
+            return "negetive"
+
+    if len(parts) == 3:
+        check_number = number_validator(parts[2])
+        if parts[1] in items_and_abriv and check_number == "valid":
+
+            item = parts[1]
+            item_price = items_and_abriv[item]["price"]
+            quantity = int(parts[2])
+            total_price = quantity*item_price
+
+            if player.balance >= total_price:
+                item_name = items_and_abriv[item]["name"]
+                print(
+                f"Item: {item_name} x {quantity}"
+                f"Total Cost: ${total_price} (Current Balance: ${player.balance})")
+                while True:
+                    confirm_input = input("\nConfirm purchase (yes/no)? ").strip().lower()
+                    if confirm_input in ["yes", "y"]:
+                        confirm = True
+                        break
+                    elif confirm_input in ["no", "n"]:
+                        confirm = False
+                    else:
+                        print("Unknown command.")
+                if confirm:
+                    player.inventory[item_name] += quantity
+                    player.balance -= total_price
+                    print(f"Purchase successful! Remaining balance: ${player.balance}")
+                    player.display_inventory()
+                else:
+                    print("\nPurchase cancelled by user.")
+            else:
+                print(f"\nNot enough money! You need ${total_price - player.balance} more.")
+        elif parts[1] not in items_and_abriv:
+            print("Item not found")
+        else:
+            if check_number == "zero":
+                print("\nYou can't buy 0 items!")
+            elif check_number == "negetive":
+                print("\nYou can't buy negetive items!")
+            elif check_number == "NaN":
+                print("\nNot a number")
+    else:
+        print("\nUnknown command. Format should be: buy <item> <quantity>")
 
 def shop():
-    items_and_abriv = ["second-chance", "sc", "guaranteed-safe-card", "gsc", "peek-dealer-card", "pdc"]
     shop_menu_command_list()
     print("Welcome to the shop!\n")
     while True:
         shop_command = input("Command: ").strip().lower()
         if shop_command == "items":
             show_shop_items()
+        elif shop_command != "" and shop_command.split()[0] == "buy":
+            buy_item(shop_command)
+        elif shop_command == "leave":
+            print("\nYou left the Shop")
+            break
         else:
             print("\nunknown command")
 
@@ -377,8 +460,8 @@ xray_ = False
 win_button = False
 menu_actions = {
     "play": start_play,
-    "balance": show_balance,
     "shop": shop,
+    "balance": show_balance,
     "exit": exit_game,
     "secretmenu": hidden_menu,
     "whatcheats": show_cheats,
