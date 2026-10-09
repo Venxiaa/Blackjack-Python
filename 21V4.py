@@ -69,10 +69,9 @@ class Deck:
     def __init__(self, card_values, suits):
         self.card_values = card_values
         self.suits = suits
-        self.deck_constructer()
-        self.placed_bet = 0
+        self.deck_constructor()
 
-    def deck_constructer(self):
+    def deck_constructor(self): 
         available_cards = []
         for types in self.suits:
             for ranks in self.card_values:
@@ -123,6 +122,7 @@ class Hand:
 class Player:
     def __init__(self, balance=1000):
         self.balance = balance
+        self.placed_bet = 0
         self.inventory = {
             "Second Chance": 0,
             "Guaranteed Safe Card": 0,
@@ -153,7 +153,7 @@ class Player:
 
     def softlock(self):
         if self.balance == 0:
-            print("Softlock prevention: you sold our newborn child for $200")
+            print("Softlock prevention: you sold your newborn child for $200")
             self.balance = 200
 
 #-----Powerups Class----
@@ -225,7 +225,7 @@ class Game:
             show_balance()
             if self.player.balance > 0:
                 try:
-                    bet = input("How much to bet? (amount/leave/allin): ")
+                    bet = input("How much to bet? (amount/leave/allin): ").strip().lower()
                     if bet == "leave":
                         print("")
                         return None
@@ -235,7 +235,7 @@ class Game:
                         return True
 
                     bet = int(bet)
-                    if bet < 0:
+                    if bet <= 0:
                         raise ValueError
                     if self.player.place_bet(bet):
                         print(f"\nYou placed a bet of ${bet}")
@@ -264,7 +264,7 @@ class Game:
     def player_turn(self):
         def hit():
             player_hand.draw_card()
-            if player.inventory["Second Chance"] > 0:
+            if self.player.inventory["Second Chance"] > 0:
                 self.powerups.second_chance()
             player_hand.announce_ace_adjustment()
             if player_hand.calculated_hand > 21:
@@ -277,7 +277,7 @@ class Game:
 
         def use_powerup(command):
             if command in items_and_abriv:
-                if player.inventory[items_and_abriv[command]["name"]] >= 1:
+                if self.player.inventory[items_and_abriv[command]["name"]] >= 1:
                     command_name = items_and_abriv[command]["name"].lower().replace(" ","_")
                     if command_name != "second_chance":
                         method = getattr(self.powerups, command_name)
@@ -568,10 +568,14 @@ def show_cheats():
 
 def money():
     try:
-        player.money(int(input("How much money do you want: ")))
-        show_balance()
+        wanted_money = int(input("How much money do you want: "))
+        if wanted_money <= 0:
+            print("You can't spawn in 0 or a negetive amount of money")
+        else:
+            player.money(wanted_money)
+            show_balance()
     except ValueError:
-        print("\nInvalid Input, needs to be a positive whole number.")
+        print("\nInvalid Input, needs to be a whole number.")
 
 def xray():
     global xray_
